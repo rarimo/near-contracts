@@ -1,0 +1,21 @@
+[package]
+name = "shared"
+version = "0.1.0"
+authors = ["Semen Loktionov <loktionov.kh@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+near-sdk = "4.0.0"
+num-bigint = "0.4"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde_with = "1"
+serde_derive = "1.0.145"
+serde-big-array = "0.4.1"
+bs58 = "0.4.0"
+prefix-hex =  "0.5.0"
+
+
+[lib]
+name = "shared"
+crate-type = ["cdylib", "lib"]

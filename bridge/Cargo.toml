@@ -1,0 +1,20 @@
+[package]
+name = "bridge"
+version = "0.3.0"
+authors = ["Semen Loktionov <loktionov.kh@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+near-sdk = { version = "4.0.0", features = ["unstable"]}
+near-contract-standards = "4.0.0"
+near-contract-tools = "0.7.2"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde_with = "1"
+serde_derive = "1.0.145"
+prefix-hex =  "0.5.0"
+base64 = "0.13.0"
+shared = { path = "../shared" }
+
+[lib]
+crate-type = ["cdylib"]

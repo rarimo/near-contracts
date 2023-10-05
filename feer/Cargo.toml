@@ -1,0 +1,16 @@
+[package]
+name = "feer"
+version = "0.1.0"
+authors = ["Semen Loktionov <loktionov.kh@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+near-sdk = "4.0.0"
+near-contract-standards = "4.0.0"
+prefix-hex =  "0.5.0"
+serde = { version = "1.0", features = ["derive"] }
+shared = { path = "../shared" }
+bs58 = "0.4.0"
+
+[lib]
+crate-type = ["cdylib"]
