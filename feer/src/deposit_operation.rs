@@ -5,9 +5,9 @@ use near_sdk::env::panic_str;
 use near_sdk::json_types::U128;
 use serde::{Deserialize, Serialize};
 
-use shared::{ContentNode, Data, GAS_FOR_TX, get_merkle_root, Hash, Secp256K1Signature, SignerPublicKey, TransferLog, verify_ecdsa_signature};
+use shared::{ContentNode, Data, GAS_FOR_TX, get_merkle_root, Hash, Secp256K1Signature, SignerPublicKey, TransferLog, TokenType, verify_ecdsa_signature};
 
-use crate::fee_tokens::{FeeToken, TokenType};
+use crate::fee_tokens::{FeeToken};
 use crate::merkle::OperationData;
 use crate::types::{DepositLog, FeeManageOperation, OperationType, TransferType};
 

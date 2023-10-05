@@ -1,7 +1,7 @@
 use near_sdk::json_types::U128;
-use shared::{Data, u128_to_bytes, vector_from_32_bytes};
+use shared::{TokenType, Data, u128_to_bytes, vector_from_32_bytes};
 
-use crate::fee_tokens::{FeeToken, TokenType};
+use crate::fee_tokens::{FeeToken};
 use crate::types::OperationType;
 
 pub struct OperationData {

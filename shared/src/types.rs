@@ -98,3 +98,11 @@ impl Secp256K1Signature {
 pub fn decode_hex_to_vec(str: String) -> Vec<u8> {
     return prefix_hex::decode::<Vec<u8>>(&*str).unwrap();
 }
+
+#[derive(BorshDeserialize, BorshSerialize, Deserialize, Serialize, PartialEq, Debug, Clone)]
+#[repr(u8)]
+pub enum TokenType {
+    Native,
+    FT,
+    NFT,
+}

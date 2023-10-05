@@ -2,15 +2,8 @@ use near_sdk::AccountId;
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::json_types::U128;
 use serde::{Deserialize, Serialize};
+use shared::{TokenType};
 
-
-#[derive(BorshDeserialize, BorshSerialize, Deserialize, Serialize, PartialEq, Debug, Clone)]
-#[repr(u8)]
-pub enum TokenType {
-    Native,
-    FT,
-    NFT,
-}
 
 #[derive(BorshDeserialize, BorshSerialize, Deserialize, Serialize, PartialEq, Debug, Clone)]
 pub struct FeeToken {

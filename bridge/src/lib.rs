@@ -10,15 +10,19 @@ use near_sdk::{AccountId, assert_one_yocto, Balance, env, near_bindgen, PanicOnD
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::json_types::U128;
 use serde::{Deserialize, Serialize};
+use events::NearEvent;
 
-use shared::{CALL_GAS, ContentNode, Data, FT_MINT_STORAGE_DEPOSIT, GAS_FOR_TX, get_merkle_root, Hash, Hashes, NFT_MINT_STORAGE_DEPOSIT, NO_ARGS, RecoveryID, Secp256K1Signature, SignerPublicKey, u128_to_bytes, verify_ecdsa_signature};
+use shared::{CALL_GAS, ContentNode, Data, FT_MINT_STORAGE_DEPOSIT, GAS_FOR_TX, get_merkle_root, Hash, Hashes, NFT_MINT_STORAGE_DEPOSIT, NO_ARGS, RecoveryID, Secp256K1Signature, SignerPublicKey, TokenType, u128_to_bytes, verify_ecdsa_signature};
 
-use crate::events::*;
+use crate::events_deposit::*;
+use crate::events_withdraw::{FtWithdrawnData, NativeWithdrawnData, NftWithdrawnData};
 use crate::external::*;
 use crate::merkle::*;
 use crate::nft::*;
 
 mod events;
+mod events_deposit;
+mod events_withdraw;
 mod external;
 mod receivers;
 mod merkle;
@@ -159,7 +163,7 @@ impl Bridge {
 
             let _token_metadata = token_metadata.clone().unwrap();
 
-            let metadata = TokenMetadata{
+            let metadata = TokenMetadata {
                 title: _token_metadata.clone().title,
                 description: _token_metadata.clone().description,
                 media: _token_metadata.clone().media,
@@ -233,28 +237,41 @@ impl Bridge {
             assert_one_yocto();
         }
 
-        let sign = Secp256K1Signature::from_hex(signature);
+        let sign = Secp256K1Signature::from_hex(signature.clone());
         let origin_hash = Hash::from_hex(origin.clone());
         let content = ContentNode::new(
             origin_hash,
             env::current_account_id(),
             self.chain.clone(),
-            TransferFullMetaOperation::new_ft_transfer(token.clone(), amount).get_data(),
+            TransferFullMetaOperation::new_ft_transfer(token.clone(), amount.clone()).get_data(),
             Some(receiver_id.clone()),
         );
 
-        self.check_signature(get_merkle_root(content, &path), sign, recovery_id);
+        self.check_signature(get_merkle_root(content, &path.clone()), sign, recovery_id.clone());
         self.hashes.check_hash(origin_hash.clone());
 
         if is_wrapped {
             let promise = ext_fungible_token::ext(token.clone())
                 .with_static_gas(GAS_FOR_TX)
                 .with_attached_deposit(env::attached_deposit())
-                .ft_mint(receiver_id.clone(), amount)
+                .ft_mint(receiver_id.clone(), amount.clone())
                 .then(
                     Self::ext(env::current_account_id())
                         .with_static_gas(GAS_FOR_TX)
-                        .handle_hash_callback(origin_hash.clone())
+                        .handle_hash_callback(
+                            origin_hash.clone(),
+                            TokenType::FT,
+                            receiver_id.clone(),
+                            env::predecessor_account_id(),
+                            origin.clone(),
+                            path.clone(),
+                            signature.clone(),
+                            recovery_id.clone(),
+                            Some(token.clone()),
+                            Some(is_wrapped.clone()),
+                            None,
+                            Some(amount.clone().0.to_string()),
+                        )
                 );
 
             PromiseOrValue::from(promise)
@@ -266,7 +283,20 @@ impl Bridge {
                 .then(
                     Self::ext(env::current_account_id())
                         .with_static_gas(GAS_FOR_TX)
-                        .handle_hash_callback(origin_hash.clone())
+                        .handle_hash_callback(
+                            origin_hash.clone(),
+                            TokenType::FT,
+                            receiver_id.clone(),
+                            env::predecessor_account_id(),
+                            origin.clone(),
+                            path.clone(),
+                            signature.clone(),
+                            recovery_id.clone(),
+                            Some(token.clone()),
+                            Some(is_wrapped.clone()),
+                            None,
+                            Some(amount.clone().0.to_string()),
+                        )
                 );
 
             PromiseOrValue::from(promise)
@@ -315,7 +345,7 @@ impl Bridge {
         assert_one_yocto();
 
         let amnt = Balance::from_str(amount.as_str()).unwrap();
-        let sign = Secp256K1Signature::from_hex(signature);
+        let sign = Secp256K1Signature::from_hex(signature.clone());
         let origin_hash = Hash::from_hex(origin.clone());
 
         let content = ContentNode::new(
@@ -328,14 +358,27 @@ impl Bridge {
             Some(receiver_id.clone()),
         );
 
-        self.check_signature(get_merkle_root(content, &path), sign, recovery_id);
+        self.check_signature(get_merkle_root(content, &path), sign, recovery_id.clone());
         self.hashes.check_hash(origin_hash.clone());
 
-        Promise::new(receiver_id)
+        Promise::new(receiver_id.clone())
             .transfer(amnt)
             .then(Self::ext(env::current_account_id())
                 .with_static_gas(GAS_FOR_TX)
-                .handle_hash_callback(origin_hash.clone())
+                .handle_hash_callback(
+                    origin_hash.clone(),
+                    TokenType::Native,
+                    receiver_id.clone(),
+                    env::predecessor_account_id(),
+                    origin.clone(),
+                    path.clone(),
+                    signature.clone(),
+                    recovery_id.clone(),
+                    None,
+                    None,
+                    None,
+                    Some(amount.clone()),
+                )
             );
     }
 
@@ -400,9 +443,64 @@ impl Bridge {
     }
 
     #[private]
-    pub fn handle_hash_callback(&mut self, #[callback_result] call_result: Result<(), PromiseError>, hash: Hash) {
+    pub fn handle_hash_callback(
+        &mut self,
+        #[callback_result] call_result: Result<(), PromiseError>,
+        hash: Hash,
+        token_type: TokenType,
+        receiver: AccountId,
+        sender: AccountId,
+        origin: String,
+        path: Vec<Hash>,
+        signature: String,
+        recovery_id: RecoveryID,
+        token: Option<AccountId>,
+        is_wrapped: Option<bool>,
+        token_id: Option<TokenId>,
+        amount: Option<String>,
+    ) {
         if call_result.is_err() {
             self.hashes.change_hash(hash, false);
+        }
+
+        match token_type {
+            TokenType::NFT => {
+                NearEvent::nft_withdrawn(vec![NftWithdrawnData::new(
+                    &token.clone().unwrap(),
+                    &token_id.clone().unwrap(),
+                    &sender.clone(),
+                    &receiver.clone(),
+                    &origin.clone(),
+                    &signature.clone(),
+                    path.clone(),
+                    recovery_id.clone(),
+                    is_wrapped.clone().unwrap(),
+                )]).emit();
+            }
+            TokenType::FT => {
+                NearEvent::ft_withdrawn(vec![FtWithdrawnData::new(
+                    &token.clone().unwrap(),
+                    &amount.clone().unwrap(),
+                    &sender.clone(),
+                    &receiver.clone(),
+                    &origin.clone(),
+                    &signature.clone(),
+                    path.clone(),
+                    recovery_id.clone(),
+                    is_wrapped.clone().unwrap(),
+                )]).emit();
+            }
+            TokenType::Native => {
+                NearEvent::native_withdrawn(vec![NativeWithdrawnData::new(
+                    &amount.clone().unwrap(),
+                    &sender.clone(),
+                    &receiver.clone(),
+                    &origin.clone(),
+                    &signature.clone(),
+                    path.clone(),
+                    recovery_id.clone(),
+                )]).emit();
+            }
         }
     }
 
@@ -474,7 +572,7 @@ impl Bridge {
         signature: String,
         recovery_id: RecoveryID,
     ) -> PromiseOrValue<bool> {
-        let sign = Secp256K1Signature::from_hex(signature);
+        let sign = Secp256K1Signature::from_hex(signature.clone());
         let origin_hash = Hash::from_hex(origin.clone());
 
         let content = ContentNode::new(
@@ -491,31 +589,57 @@ impl Bridge {
             Some(receiver_id.clone()),
         );
 
-        self.check_signature(get_merkle_root(content, &path), sign, recovery_id);
+        self.check_signature(get_merkle_root(content, &path.clone()), sign, recovery_id.clone());
         self.hashes.check_hash(origin_hash.clone());
 
         if is_wrapped {
             let promise = ext_non_fungible_token::ext(token.clone())
                 .with_static_gas(GAS_FOR_TX)
                 .with_attached_deposit(env::attached_deposit())
-                .nft_mint(token_id, receiver_id, token_metadata.clone(), None)
+                .nft_mint(token_id.clone(), receiver_id.clone(), token_metadata.clone(), None)
                 .then(
                     Self::ext(env::current_account_id())
                         .with_static_gas(GAS_FOR_TX)
-                        .handle_hash_callback(origin_hash.clone())
+                        .handle_hash_callback(
+                            origin_hash.clone(),
+                            TokenType::NFT,
+                            receiver_id.clone(),
+                            env::predecessor_account_id(),
+                            origin.clone(),
+                            path.clone(),
+                            signature.clone(),
+                            recovery_id.clone(),
+                            Some(token.clone()),
+                            Some(is_wrapped.clone()),
+                            Some(token_id.clone()),
+                            None,
+                        )
                 );
 
             PromiseOrValue::from(promise)
         } else {
             let promise = self.internal_nft_transfer(
-                token,
-                token_id,
-                receiver_id,
+                token.clone(),
+                token_id.clone(),
+                receiver_id.clone(),
                 env::attached_deposit(),
             ).then(
                 Self::ext(env::current_account_id())
                     .with_static_gas(GAS_FOR_TX)
-                    .handle_hash_callback(origin_hash.clone())
+                    .handle_hash_callback(
+                        origin_hash.clone(),
+                        TokenType::NFT,
+                        receiver_id.clone(),
+                        env::predecessor_account_id(),
+                        origin.clone(),
+                        path.clone(),
+                        signature.clone(),
+                        recovery_id.clone(),
+                        Some(token.clone()),
+                        Some(is_wrapped.clone()),
+                        Some(token_id.clone()),
+                        None,
+                    )
             );
 
             PromiseOrValue::from(promise)
