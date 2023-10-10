@@ -100,6 +100,7 @@ impl StorageManagement for Feer {
     /// * panics if `amount > 0`
     /// * never transfers Ⓝ to caller
     /// * returns a `storage_balance` struct if `amount` is 0
+    #[payable]
     fn storage_withdraw(&mut self, amount: Option<U128>) -> StorageBalance {
         assert_one_yocto();
         let predecessor_account_id = env::predecessor_account_id();
@@ -117,6 +118,7 @@ impl StorageManagement for Feer {
         }
     }
 
+    #[payable]
     fn storage_unregister(&mut self, force: Option<bool>) -> bool {
         self.internal_storage_unregister(force).is_some()
     }
