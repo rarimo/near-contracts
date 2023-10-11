@@ -4,11 +4,11 @@ echo "${BWhite}–––––––––––––––––––––�
 echo "${BYellow}Account ID:" "${BGreen}$ID"
 echo "${BWhite}–––––––––––––––––––––––––––––––––––––––––––––––––––"
 echo "${BYellow}Contract:" "${BGreen}$BRIDGE"
-echo "${BYellow}Hex:" "${BGreen}0x$(printf '%s' "$BRIDGE" | xxd -p -u)"
+echo "${BYellow}Hex:" "${BGreen}0x$(printf '%s' "$BRIDGE" | xxd -p)"
 echo "${BYellow}Signer Public Key:" "${BGreen}$SIGNER_PUB_KEY"
 echo "${BWhite}–––––––––––––––––––––––––––––––––––––––––––––––––––"
 echo "${BYellow}Contract:" "${BGreen}$FEE"
-echo "${BYellow}Hex:" "${BGreen}0x$(printf '%s' "$FEE" | xxd -p -u)"
+echo "${BYellow}Hex:" "${BGreen}0x$(printf '%s' "$FEE" | xxd -p)"
 echo "${BWhite}–––––––––––––––––––––––––––––––––––––––––––––––––––"
 
 # delete existing accounts
@@ -30,3 +30,4 @@ near call $BRIDGE new '{"signer": "'$SIGNER_PUB_KEY'", "fee_contract": "'$FEE'",
 near call $FEE new '{"chain": "'$CHAIN'", "bridge_addr": "'$BRIDGE'", "tokens": [{"token_type": "Native", "fee": "1"}, {"token_addr": "'$USDC'", "token_type": "FT", "fee": "1"}]}' --accountId $ID
 near call $USDC storage_deposit '{"account_id": "'$FEE'"}' --accountId $ID --amount 0.00125
 near call $FEE storage_deposit '{"account_id": "'$ID'"}' --accountId $ID --amount 0.00663
+near call $USDC ft_mint '{"receiver_id":"'$BRIDGE'","amount":"10000000000000000"}' --accountId $ID --gas 300000000000000
