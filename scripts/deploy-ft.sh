@@ -89,3 +89,10 @@ near call $USDC_SOL storage_deposit '{"account_id": "'$BRIDGE'"}' --accountId $I
 near call $SOL storage_deposit '{"account_id": "'$BRIDGE'"}' --accountId $ID --amount 0.00125
 near call $ETH_GOERLI storage_deposit '{"account_id": "'$BRIDGE'"}' --accountId $ID --amount 0.00125
 near call $AVAX_FUJI storage_deposit '{"account_id": "'$BRIDGE'"}' --accountId $ID --amount 0.00125
+near call $USDC storage_deposit '{"account_id": "'$FEE'"}' --accountId $ID --amount 0.00125
+near call $USDC_GOERLI storage_deposit '{"account_id": "'$FEE'"}' --accountId $ID --amount 0.00125
+near call $USDC_FUJI storage_deposit '{"account_id": "'$FEE'"}' --accountId $ID --amount 0.00125
+near call $USDC_SOL storage_deposit '{"account_id": "'$FEE'"}' --accountId $ID --amount 0.00125
+near call $SOL storage_deposit '{"account_id": "'$FEE'"}' --accountId $ID --amount 0.00125
+near call $ETH_GOERLI storage_deposit '{"account_id": "'$FEE'"}' --accountId $ID --amount 0.00125
+near call $AVAX_FUJI storage_deposit '{"account_id": "'$FEE'"}' --accountId $ID --amount 0.00125
