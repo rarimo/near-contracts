@@ -45,6 +45,12 @@ echo "${BYellow}Name:" "${BGreen}$AVAX_FUJI_NAME"
 echo "${BYellow}Symbol:" "${BGreen}$AVAX_FUJI_SYMBOL"
 echo "${BYellow}Decimals:" "${BGreen}$AVAX_FUJI_DECIMALS"
 echo "${BWhite}–––––––––––––––––––––––––––––––––––––––––––––––––––"
+echo "${BYellow}Contract:" "${BGreen}$RMO_RARIMO"
+echo "${BYellow}Hex:" "${BGreen}0x$(printf '%s' "$RMO_RARIMO" | xxd -p)"
+echo "${BYellow}Name:" "${BGreen}$RMO_RARIMO_NAME"
+echo "${BYellow}Symbol:" "${BGreen}$RMO_RARIMO_SYMBOL"
+echo "${BYellow}Decimals:" "${BGreen}$RMO_RARIMO_DECIMALS"
+echo "${BWhite}–––––––––––––––––––––––––––––––––––––––––––––––––––"
 
 # delete created accounts
 near delete $USDC $ID --accountId $ID
@@ -54,6 +60,7 @@ near delete $USDC_SOL $ID --accountId $ID
 near delete $SOL $ID --accountId $ID
 near delete $ETH_GOERLI $ID --accountId $ID
 near delete $AVAX_FUJI $ID --accountId $ID
+near delete $RMO_RARIMO $ID --accountId $ID
 
 # create account
 near create-account $USDC --masterAccount $ID --initialBalance 2
@@ -63,6 +70,7 @@ near create-account $USDC_SOL --masterAccount $ID --initialBalance 2
 near create-account $SOL --masterAccount $ID --initialBalance 2
 near create-account $ETH_GOERLI --masterAccount $ID --initialBalance 2
 near create-account $AVAX_FUJI --masterAccount $ID --initialBalance 2
+near create-account $RMO_RARIMO --masterAccount $ID --initialBalance 2
 
 # deploy
 near deploy --wasmFile .././res/fungible_token.wasm --accountId $USDC
@@ -72,6 +80,7 @@ near deploy --wasmFile .././res/fungible_token.wasm --accountId $USDC_SOL
 near deploy --wasmFile .././res/fungible_token.wasm --accountId $SOL
 near deploy --wasmFile .././res/fungible_token.wasm --accountId $ETH_GOERLI
 near deploy --wasmFile .././res/fungible_token.wasm --accountId $AVAX_FUJI
+near deploy --wasmFile .././res/fungible_token.wasm --accountId $RMO_RARIMO
 
 # init
 near call $USDC new '{"owner_id":"'$ID'","total_supply":"0","metadata":{"spec":"ft-1.0.0","name":"'$USDC_NAME'","symbol":"'$USDC_SYMBOL'","decimals":'$USDC_DECIMALS'}}' --accountId $ID
@@ -81,6 +90,7 @@ near call $USDC_SOL new '{"owner_id":"'$BRIDGE'","total_supply":"0","metadata":{
 near call $SOL new '{"owner_id":"'$BRIDGE'","total_supply":"0","metadata":{"spec":"ft-1.0.0","name":"'$SOL_NAME'","symbol":"'$SOL_SYMBOL'","decimals":'$SOL_DECIMALS'}}' --accountId $ID
 near call $ETH_GOERLI new '{"owner_id":"'$BRIDGE'","total_supply":"0","metadata":{"spec":"ft-1.0.0","name":"'$ETH_GOERLI_NAME'","symbol":"'$ETH_GOERLI_SYMBOL'","decimals":'$ETH_GOERLI_DECIMALS'}}' --accountId $ID
 near call $AVAX_FUJI new '{"owner_id":"'$BRIDGE'","total_supply":"0","metadata":{"spec":"ft-1.0.0","name":"'$AVAX_FUJI_NAME'","symbol":"'$AVAX_FUJI_SYMBOL'","decimals":'$AVAX_FUJI_DECIMALS'}}' --accountId $ID
+near call $RMO_RARIMO new '{"owner_id":"'$BRIDGE'","total_supply":"0","metadata":{"spec":"ft-1.0.0","name":"'$RMO_RARIMO_NAME'","symbol":"'$RMO_RARIMO_SYMBOL'","decimals":'$RMO_RARIMO_DECIMALS'}}' --accountId $ID
 
 near call $USDC storage_deposit '{"account_id": "'$BRIDGE'"}' --accountId $ID --amount 0.00125
 near call $USDC_GOERLI storage_deposit '{"account_id": "'$BRIDGE'"}' --accountId $ID --amount 0.00125
@@ -89,6 +99,7 @@ near call $USDC_SOL storage_deposit '{"account_id": "'$BRIDGE'"}' --accountId $I
 near call $SOL storage_deposit '{"account_id": "'$BRIDGE'"}' --accountId $ID --amount 0.00125
 near call $ETH_GOERLI storage_deposit '{"account_id": "'$BRIDGE'"}' --accountId $ID --amount 0.00125
 near call $AVAX_FUJI storage_deposit '{"account_id": "'$BRIDGE'"}' --accountId $ID --amount 0.00125
+near call $RMO_RARIMO storage_deposit '{"account_id": "'$BRIDGE'"}' --accountId $ID --amount 0.00125
 near call $USDC storage_deposit '{"account_id": "'$FEE'"}' --accountId $ID --amount 0.00125
 near call $USDC_GOERLI storage_deposit '{"account_id": "'$FEE'"}' --accountId $ID --amount 0.00125
 near call $USDC_FUJI storage_deposit '{"account_id": "'$FEE'"}' --accountId $ID --amount 0.00125
@@ -96,3 +107,4 @@ near call $USDC_SOL storage_deposit '{"account_id": "'$FEE'"}' --accountId $ID -
 near call $SOL storage_deposit '{"account_id": "'$FEE'"}' --accountId $ID --amount 0.00125
 near call $ETH_GOERLI storage_deposit '{"account_id": "'$FEE'"}' --accountId $ID --amount 0.00125
 near call $AVAX_FUJI storage_deposit '{"account_id": "'$FEE'"}' --accountId $ID --amount 0.00125
+near call $RMO_RARIMO storage_deposit '{"account_id": "'$FEE'"}' --accountId $ID --amount 0.00125
