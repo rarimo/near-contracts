@@ -5,11 +5,11 @@ use near_sdk::env::panic_str;
 use near_sdk::json_types::U128;
 
 use deposit_operation::DepositOperation;
-use shared::{GAS_FOR_TX, Hashes, TransferLog};
+use shared::{GAS_FOR_TX, Hashes, TransferLog, TokenType};
 
 use crate::deposits::DepositsManager;
 use crate::external::*;
-use crate::fee_tokens::{FeeToken, FeeTokensManager, TokenType};
+use crate::fee_tokens::{FeeToken, FeeTokensManager};
 use crate::types::{DepositLog, TransferType};
 use crate::receivers::{is_deposit_log_valid};
 

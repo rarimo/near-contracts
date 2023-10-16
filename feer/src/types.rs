@@ -2,9 +2,9 @@ use near_sdk::AccountId;
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
 
-use shared::{Hash, RecoveryID};
+use shared::{Hash, RecoveryID, TokenType};
 
-use crate::fee_tokens::{FeeToken, TokenType};
+use crate::fee_tokens::{FeeToken};
 
 #[derive(BorshDeserialize, BorshSerialize, Deserialize, Serialize, Debug, Clone)]
 pub struct FeeManageOperation {

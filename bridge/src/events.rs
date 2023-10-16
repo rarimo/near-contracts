@@ -1,8 +1,6 @@
-use near_contract_standards::non_fungible_token::TokenId;
-use near_sdk::AccountId;
-use near_sdk::json_types::U128;
-use serde::{Deserialize, Serialize};
-use serde_with::skip_serializing_none;
+use serde_derive::{Deserialize, Serialize};
+use crate::events_deposit::{FtDepositedData, NativeDepositedData, NftDepositedData};
+use crate::events_withdraw::{FtWithdrawnData, NativeWithdrawnData, NftWithdrawnData};
 
 #[derive(Serialize, Debug)]
 #[serde(tag = "standard")]
@@ -45,6 +43,7 @@ pub struct NativeEvent<'a> {
 pub enum Nep171EventKind<'a> {
     #[serde(borrow)]
     NftDeposited(Vec<NftDepositedData<'a>>),
+    NftWithdrawn(Vec<NftWithdrawnData<'a>>),
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -54,6 +53,7 @@ pub enum Nep171EventKind<'a> {
 pub enum Nep141EventKind<'a> {
     #[serde(borrow)]
     FtDeposited(Vec<FtDepositedData<'a>>),
+    FtWithdrawn(Vec<FtWithdrawnData<'a>>),
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -63,125 +63,7 @@ pub enum Nep141EventKind<'a> {
 pub enum NativeEventKind<'a> {
     #[serde(borrow)]
     NativeDeposited(Vec<NativeDepositedData<'a>>),
-}
-
-#[skip_serializing_none]
-#[derive(Deserialize, Serialize, Debug, Clone)]
-pub struct NftDepositedData<'a> {
-    #[serde(borrow)]
-    pub token: &'a str,
-    #[serde(borrow)]
-    pub token_id: &'a str,
-    #[serde(borrow)]
-    pub sender: &'a str,
-    #[serde(borrow)]
-    pub receiver: &'a str,
-    #[serde(borrow)]
-    pub chain_to: &'a str,
-    pub is_wrapped: bool,
-    pub bundle_data: Option<String>,
-    pub bundle_salt: Option<String>,
-}
-
-impl<'a> NftDepositedData<'a> {
-    pub fn new(
-        token: &'a AccountId,
-        token_id: &'a TokenId,
-        sender: &'a AccountId,
-        receiver: &'a String,
-        chain_to: &'a str,
-        is_wrapped: bool,
-        bundle_data: Option<String>,
-        bundle_salt: Option<String>,
-    ) -> NftDepositedData<'a> {
-        let data = Self {
-            token: token.as_str(),
-            token_id: token_id.as_str(),
-            sender: sender.as_str(),
-            receiver,
-            chain_to,
-            is_wrapped,
-            bundle_data,
-            bundle_salt,
-        };
-        data
-    }
-}
-
-#[skip_serializing_none]
-#[derive(Deserialize, Serialize, Debug, Clone)]
-pub struct FtDepositedData<'a> {
-    #[serde(borrow)]
-    pub token: &'a str,
-    #[serde(borrow)]
-    pub sender: &'a str,
-    #[serde(borrow)]
-    pub receiver: &'a str,
-    #[serde(borrow)]
-    pub chain_to: &'a str,
-    pub amount: U128,
-    pub is_wrapped: bool,
-    pub bundle_data: Option<String>,
-    pub bundle_salt: Option<String>,
-}
-
-impl<'a> FtDepositedData<'a> {
-    pub fn new(
-        token: &'a AccountId,
-        amount: U128,
-        sender: &'a AccountId,
-        receiver: &'a String,
-        chain_to: &'a str,
-        is_wrapped: bool,
-        bundle_data: Option<String>,
-        bundle_salt: Option<String>,
-    ) -> FtDepositedData<'a> {
-        Self {
-            token: token.as_str(),
-            sender: sender.as_str(),
-            receiver,
-            amount,
-            chain_to,
-            is_wrapped,
-            bundle_data,
-            bundle_salt,
-        }
-    }
-}
-
-#[skip_serializing_none]
-#[derive(Deserialize, Serialize, Debug, Clone)]
-pub struct NativeDepositedData<'a> {
-    #[serde(borrow)]
-    pub sender: &'a str,
-    #[serde(borrow)]
-    pub receiver: &'a str,
-    #[serde(borrow)]
-    pub chain_to: &'a str,
-    #[serde(borrow)]
-    pub amount: &'a str,
-    pub bundle_data: Option<String>,
-    pub bundle_salt: Option<String>,
-}
-
-impl<'a> NativeDepositedData<'a> {
-    pub fn new(
-        amount: &'a str,
-        sender: &'a AccountId,
-        receiver: &'a String,
-        chain_to: &'a str,
-        bundle_data: Option<String>,
-        bundle_salt: Option<String>,
-    ) -> NativeDepositedData<'a> {
-        Self {
-            sender: sender.as_str(),
-            receiver,
-            amount,
-            chain_to,
-            bundle_data,
-            bundle_salt,
-        }
-    }
+    NativeWithdrawn(Vec<NativeWithdrawnData<'a>>),
 }
 
 impl<'a> NearEvent<'a> {
@@ -224,13 +106,28 @@ impl<'a> NearEvent<'a> {
     }
 
     #[must_use = "don't forget to .emit() the event"]
+    pub fn nft_withdrawn(data: Vec<NftWithdrawnData<'a>>) -> Self {
+        NearEvent::new_171_v1(Nep171EventKind::NftWithdrawn(data))
+    }
+
+    #[must_use = "don't forget to .emit() the event"]
     pub fn ft_deposited(data: Vec<FtDepositedData<'a>>) -> Self {
         NearEvent::new_141_v1(Nep141EventKind::FtDeposited(data))
     }
 
     #[must_use = "don't forget to .emit() the event"]
+    pub fn ft_withdrawn(data: Vec<FtWithdrawnData<'a>>) -> Self {
+        NearEvent::new_141_v1(Nep141EventKind::FtWithdrawn(data))
+    }
+
+    #[must_use = "don't forget to .emit() the event"]
     pub fn native_deposited(data: Vec<NativeDepositedData<'a>>) -> Self {
         NearEvent::new_native_v1(NativeEventKind::NativeDeposited(data))
+    }
+
+    #[must_use = "don't forget to .emit() the event"]
+    pub fn native_withdrawn(data: Vec<NativeWithdrawnData<'a>>) -> Self {
+        NearEvent::new_native_v1(NativeEventKind::NativeWithdrawn(data))
     }
 
     pub(crate) fn to_json_string(&self) -> String {
